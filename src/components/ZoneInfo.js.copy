@@ -1,0 +1,48 @@
+import React , { useState, useEffect }from 'react'
+import { axiosClient } from "../api-common.js";
+import { useQuery, useMutation } from "react-query";
+const api_base_url = axiosClient.defaults.baseURL;
+
+//const response = await axiosClient.get(api_base_url + "zones");
+
+
+
+
+function ZoneInfo(props) {
+
+
+  const [zoneToLookUp, setZoneToLookUp] = useState(props.zoneToDisplay);
+  const [rerender, setRerender] = useState(false);
+
+
+
+
+  useEffect(() => { 
+    setZoneToLookUp(props.zoneToDisplay);
+    setRerender(!rerender);
+    // This is be executed when `loading` state changes
+  }, [props.zoneToDisplay]);
+  
+    //const [zoneID, setZoneID] = useState(props.zoneToDisplay);
+
+  const { isLoading, error, data } = useQuery('fetchZone', () =>
+  axiosClient(api_base_url + "zone/" + zoneToLookUp));
+
+
+    return (
+      <div className="ZoneInfo">
+  
+        <h1>React Query of Specific Zone</h1>
+        {error && <div>Something went wrong ...</div>}
+   
+        {isLoading ? (
+          <div>Retrieving Zone Data & Info ...</div>
+        ) : (
+          <pre>{JSON.stringify(data, null, 2)}
+          </pre>
+        )}
+      </div>
+    );
+  }
+  
+export default ZoneInfo

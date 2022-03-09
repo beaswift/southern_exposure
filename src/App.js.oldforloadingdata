@@ -1,0 +1,392 @@
+import logo from './logo.svg';
+import './App.css';
+import React, { Component, useState, useEffect } from "react";
+import { useQuery } from "react-query";
+import { axiosClient } from "./api-common.js";
+import { useMutation } from "react-query";
+
+import { Button, Navbar, NavDropdown, Nav, Container } from 'react-bootstrap'
+//import Navbar from 'react-bootstrap/Navbar'
+
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+const api_base_url = axiosClient.defaults.baseURL
+
+
+
+
+function App() {
+  
+  const [getResult, setGetResult] = useState(null);
+  const formatResponse = (res) => {
+    return JSON.stringify(res, null, 2);
+  };
+  const { isLoading: isLoadingZones, refetch: getAllSensorZones } = useQuery(
+    "query-zones",
+    async () => {
+        return await axiosClient.get(api_base_url + "zone_preferences");
+    },
+    {
+      enabled: false,
+      onSuccess: (res) => {
+        const result = {
+          status: res.status + "-" + res.statusText,
+          headers: res.headers,
+          data: res.data,
+        };
+        setGetResult(formatResponse(result));
+      },
+      onError: (err) => {
+        setGetResult(formatResponse(err.response?.data || err));
+      },
+    }
+  );
+  useEffect(() => {
+    if (isLoadingZones) setGetResult("loading...");
+  }, [isLoadingZones]);
+  function getAllSensorData() {
+    try {
+      getAllSensorZones();
+    } catch (err) {
+      setGetResult(formatResponse(err));
+    }
+  }
+
+  const { isLoading: isLoadingLighting, refetch: getAllLightPreferences } = useQuery(
+    "query-light-zones",
+    async () => {
+        return await axiosClient.get(api_base_url + "lighting_preferences");
+    },
+    {
+      enabled: false,
+      onSuccess: (res) => {
+        const result = {
+          status: res.status + "-" + res.statusText,
+          headers: res.headers,
+          data: res.data,
+        };
+        setGetResult(formatResponse(result));
+      },
+      onError: (err) => {
+        setGetResult(formatResponse(err.response?.data || err));
+      },
+    }
+  );
+  useEffect(() => {
+    if (isLoadingLighting) setGetResult("loading...");
+  }, [isLoadingLighting]);
+  function getAllLightPreferenceData() {
+    try {
+        getAllLightPreferences();
+    } catch (err) {
+      setGetResult(formatResponse(err));
+    }
+  }
+
+  const { isLoading: isLoadingReadings, refetch: getAllReadings } = useQuery(
+    "query-readings",
+    async () => {
+        return await axiosClient.get(api_base_url + "readings");
+    },
+    {
+      enabled: false,
+      onSuccess: (res) => {
+        const result = {
+          status: res.status + "-" + res.statusText,
+          headers: res.headers,
+          data: res.data,
+        };
+        setGetResult(formatResponse(result));
+      },
+      onError: (err) => {
+        setGetResult(formatResponse(err.response?.data || err));
+      },
+    }
+  );
+  useEffect(() => {
+    if (isLoadingReadings) setGetResult("loading...");
+  }, [isLoadingReadings]);
+  function getAllReadingsData() {
+    try {
+        getAllReadings();
+    } catch (err) {
+      setGetResult(formatResponse(err));
+    }
+  }
+
+  const clearGetOutput = () => {
+    setGetResult(null);
+  };
+
+  // PUTS HERE
+
+  
+// Put for Lighting>>
+
+
+const [putLightingName, setPutLightingName] = useState("");
+const [putLightingTimes, setPutLightingTimes] = useState("");
+const [putLightingGPIOPin, setPutLightingGPIOPin] = useState("");
+const [putLightingResult, setPutLightingResult] = useState(null);
+
+const { isLoading: isUpdatingLightingPreference, mutate: updateLightingPreference } = useMutation(
+  async () => {
+
+    return await axiosClient.put(api_base_url + "lighting_preferences/", {
+      lighting_name: putLightingName,
+      lighting_times: putLightingTimes,
+      gpio_pin: putLightingGPIOPin,
+    });
+  },
+  {
+    onSuccess: (res) => {
+      const result = {
+        status: res.status + "-" + res.statusText,
+        headers: res.headers,
+        data: res.data,
+      };
+      setPutLightingResult(formatResponse(result));
+    },
+    onError: (err) => {
+      setPutLightingResult(formatResponse(err.response?.data || err));
+    },
+  }
+);
+useEffect(() => {
+  if (isUpdatingLightingPreference) setPutLightingResult("updating...");
+}, [isUpdatingLightingPreference]);
+function putLightingData() {
+  if (putLightingName) {
+    try {
+      updateLightingPreference();
+    } catch (err) {
+      setPutLightingResult(formatResponse(err));
+    }
+  }
+}
+const clearPutLightingOutput = () => {
+  setPutLightingResult(null);
+};
+// Put Lighting^^
+
+
+
+// Put for Sensor / Zone>>
+
+const [putSensorName, setPutSensorName] = useState("");
+const [putMinimumMoisture, setPutMinimumMoisture] = useState(180);
+const [putIrrigationInterval, setPutIrrigationInterval] = useState(0);  
+const [putIrrigationTime, setPutIrrigationTime] = useState("");
+const [putZoneGPIOPin, setPutZoneGPIOPin] = useState("");
+const [putZoneResult, setPutZoneResult] = useState(null);
+
+const { isLoading: isUpdatingZonePreference, mutate: updateZonePreference } = useMutation(
+  async () => {
+    return await axiosClient.put(api_base_url + "zone_preferences/", {
+      sensor_name: putSensorName,
+      minimum_moisture: putMinimumMoisture,
+      irrigation_interval: putIrrigationInterval,
+      irrigation_time: putIrrigationTime,
+      gpio_pin: putZoneGPIOPin,     
+    });
+  },
+  {
+    onSuccess: (res) => {
+      const result = {
+        status: res.status + "-" + res.statusText,
+        headers: res.headers,
+        data: res.data,
+      };
+      setPutZoneResult(formatResponse(result));
+    },
+    onError: (err) => {
+      setPutZoneResult(formatResponse(err.response?.data || err));
+    },
+  }
+);
+useEffect(() => {
+  if (isUpdatingZonePreference) setPutZoneResult("updating...");
+}, [isUpdatingZonePreference]);
+function putSensorData() {
+  if (putSensorName) {
+    try {
+      updateZonePreference();
+    } catch (err) {
+      setPutZoneResult(formatResponse(err));
+    }
+  }
+}
+const clearPutZoneOutput = () => {
+  setPutZoneResult(null);
+};
+
+// Put for Sensor / Zone ^^
+
+// Trying to build zones list
+
+
+
+
+return (
+    <div id="app" className="container">
+
+
+
+
+      <div className="card">
+
+        <div className="card-header">Load Data from Backend</div>
+        <div className="card-body">
+          <div className="input-group input-group-sm">
+            <Button className="btn btn-sm btn-primary" onClick={getAllSensorData}>
+              Get All Zones
+            </Button>
+            <button className="btn btn-sm btn-primary" onClick={getAllLightPreferenceData}>
+              Get All Lighting Preferences
+            </button>
+
+            <button className="btn btn-sm btn-primary" onClick={getAllReadingsData}>
+              Get All Readings
+            </button>
+            </div>
+            <div className="card-body">
+            <button
+              className="btn btn-sm btn-warning ml-2"
+              onClick={clearGetOutput}
+            >
+              Clear
+            </button>
+            {getResult && (
+            <div className="alert alert-secondary mt-2" role="alert">
+              <pre>{getResult}</pre>
+            </div>
+          )}
+          </div> 
+
+
+          <br></br>
+        <div className="card-header">Update Lighting Data On Backend</div>  
+        <div className="card-body">  
+        <div className="form-group">
+          <input
+            type="text"
+            value={putLightingName}
+            onChange={(e) => setPutLightingName(e.target.value)}
+            className="form-control"
+            placeholder="Lighting Name"
+          />
+        </div>
+        <div className="form-group">
+          <input
+            type="text"
+            value={putLightingTimes}
+            onChange={(e) => setPutLightingTimes(e.target.value)}
+            className="form-control"
+            placeholder="Lighting Times"
+          />
+        </div>
+        <div className="form-group">
+          <input
+            type="text"
+            value={putLightingGPIOPin}
+            onChange={(e) => setPutLightingGPIOPin(e.target.value)}
+            className="form-control"
+            placeholder="GPIO Pin"
+          />
+        </div>
+        <button className="btn btn-sm btn-primary" onClick={putLightingData}>
+          Update Lighting Data
+        </button>
+        </div>
+        <div className="card-body">
+        <button
+          className="btn btn-sm btn-warning ml-2"
+          onClick={clearPutLightingOutput}
+        >
+          Clear
+        </button>
+        {putLightingResult && (
+          <div className="alert alert-secondary mt-2" role="alert">
+            <pre>{putLightingResult}</pre>
+          </div>
+        )}
+      </div>
+
+      <br></br>
+      <div className="card-header">Update Zone/Sensor Data On Backend</div>  
+      <div className="card-body">  
+      <div className="form-group">
+        <input
+          type="text"
+          value={putSensorName}
+          onChange={(e) => setPutSensorName(e.target.value)}
+          className="form-control"
+          placeholder="Sensor/Zone Name"
+        />
+      </div>
+      <div className="form-group">
+          <input
+            type="text"
+            value={putMinimumMoisture}
+            onChange={(e) => setPutMinimumMoisture(e.target.value)}
+            className="form-control"
+            placeholder="Minimum Moisture Value"
+          />
+        </div>
+
+      <div className="form-group">
+        <input
+          type="text"
+          value={putIrrigationInterval}
+          onChange={(e) => setPutIrrigationInterval(e.target.value)}
+          className="form-control"
+          placeholder="Irrigation Interval"
+        />
+      </div>
+      <div className="form-group">
+          <input
+            type="text"
+            value={putIrrigationTime}
+            onChange={(e) => setPutIrrigationTime(e.target.value)}
+            className="form-control"
+            placeholder="Irrigation Time of Day (i.e. 0800,1500)"
+          />
+        </div>
+
+      <div className="form-group">
+        <input
+          type="text"
+          value={putZoneGPIOPin}
+          onChange={(e) => setPutZoneGPIOPin(e.target.value)}
+          className="form-control"
+          placeholder="GPIO Pin"
+        />
+      </div>
+      <button className="btn btn-sm btn-primary" onClick={putSensorData}>
+        Update Sensor Data
+      </button>
+      </div>
+      <div className="card-body">
+      <button
+        className="btn btn-sm btn-warning ml-2"
+        onClick={clearPutZoneOutput}
+      >
+        Clear
+      </button>
+      {putZoneResult && (
+        <div className="alert alert-secondary mt-2" role="alert">
+          <pre>{putZoneResult}</pre>
+        </div>
+      )}
+      </div>
+
+
+
+        </div>
+      </div>
+      
+    </div>
+  );
+}
+
+export default App;

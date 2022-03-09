@@ -1,0 +1,123 @@
+return (
+
+    <div>
+      <h1>React Query of Specific Zone</h1>
+          {error && <div>Something went wrong ...</div>}
+     
+          {isLoading ? (
+            <div>Retrieving Zone Data & Info ...</div>
+          ) : (
+            <pre>{JSON.stringify(data, null, 2)}
+            </pre>
+          )}
+  
+    </div>
+   
+  <div className="card-header">Update Zone/Sensor Data On Backend</div>  
+        <div className="card-body">  
+        <div className="form-group">
+          <input
+            type="text"
+            value={putSensorName}       
+            disabled={true}
+            //onChange={(e) => setPutSensorName(e.target.value)}
+            className="form-control"
+            placeholder="Sensor/Zone Name"
+          />
+        </div>
+        <div>
+        <label>
+            Set Irrigation By Moisture:
+            </label>
+            <input
+              name="setIrrigationByMoisture"
+              type="checkbox"
+              checked={putIrrigationTriggerByMoisture}
+              onChange={(e) => setPutIrrigationTriggerByMoisture(e.target.value)} 
+              />
+  
+        </div>
+        <div className="form-group">
+        <label>
+            Minimum Moisture to Trigger Irrigation:
+            </label>
+            <input
+              type="text"
+              value={putMinimumMoisture}
+              onChange={(e) => setPutMinimumMoisture(e.target.value)}
+              className="form-control"
+              placeholder="Minimum Moisture Value"
+            />
+          </div>
+  
+          <div className="form-group">
+          <label>
+            Length of Irrigation in Seconds:
+            </label>
+            <input
+              type="text"
+              value={putIrrigationLength}
+              onChange={(e) => setPutIrrigationLength(e.target.value)}
+              className="form-control"
+              placeholder="Irrigation Length in Seconds"
+            />
+          </div>
+          
+        <div className="form-group">
+        <label>
+            Interval Between Irrigations (if triggered by moisture):
+            </label>
+          <input
+            type="text"
+            value={putIrrigationInterval}
+            onChange={(e) => setPutIrrigationInterval(e.target.value)}
+            className="form-control"
+            placeholder="Irrigation Interval"
+          />
+        </div>
+        <div className="form-group">
+        <label>
+            Irrigation Time of Day:
+            </label>
+            <input
+              type="text"
+              value={putIrrigationTime}
+              onChange={(e) => setPutIrrigationTime(e.target.value)}
+              className="form-control"
+              placeholder=" 24hr format, comma separated for multiple. Example: 0800,1500"
+            />
+          </div>
+  
+        <div className="form-group">
+        <label>
+            GPIO Pin to Trigger Watering:
+            </label>
+          <input
+            type="text"
+            value={putZoneGPIOPin}
+            onChange={(e) => setPutZoneGPIOPin(e.target.value)}
+            className="form-control"
+            placeholder="GPIO Pin"
+          />
+        </div>
+        <button className="btn btn-sm btn-primary" onClick={putSensorData}>
+          Update Sensor Data
+        </button>
+        </div>
+        <div className="card-body">
+        <button
+          className="btn btn-sm btn-warning ml-2"
+          onClick={clearPutZoneOutput}
+        >
+          Clear
+        </button>
+        {putZoneResult && (
+          <div className="alert alert-secondary mt-2" role="alert">
+            <pre>{putZoneResult}</pre>
+          </div>
+        )}
+        </div>
+  
+    </div>
+  );
+  }

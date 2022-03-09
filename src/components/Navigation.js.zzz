@@ -1,0 +1,47 @@
+
+import React, { Component, useState, useEffect } from "react";
+import { Navbar, NavDropdown, Nav, Container } from 'react-bootstrap';
+import { axiosClient } from "../api-common.js";
+import { useQuery } from "react-query";
+
+const api_base_url = axiosClient.defaults.baseURL
+
+function Navigation(props) {
+
+const { isLoading, error, data } = useQuery('fetchZones', () =>
+axiosClient(api_base_url + "zone_preferences"))
+
+
+const [visibleComponent, setVisibleComponent] = useState("zoneInfo")
+  
+
+ return <div>
+  
+  <Navbar bg="light" expand="lg">
+    <Container>
+      <Navbar.Brand href="#home">Groundskeeper Murphy</Navbar.Brand>
+      <Navbar.Toggle aria-controls="basic-navbar-nav" />
+      <Navbar.Collapse id="basic-navbar-nav">
+        <Nav className="me-auto">
+          <Nav.Link  onClick={() => setVisibleComponent("basicInfo") }>Overview</Nav.Link>
+          <Nav.Link onClick={() => setVisibleComponent("lightingInfo") }>Lighting</Nav.Link>
+          <NavDropdown title="Zones" id="basic-nav-dropdown">
+          {error && <div>Something went wrong ...</div>}
+     
+          {isLoading ? (
+            <div>Retrieving Information ...</div>
+          ) : (
+            <p>{data.data.rows.map((sensor, index) => (<div >{sensor.sensor_name}</div>))}
+            </p>
+          )}
+
+          </NavDropdown>
+        </Nav>
+      </Navbar.Collapse>
+    </Container>
+    </Navbar>     
+    </div>
+}
+
+export default Navigation
+

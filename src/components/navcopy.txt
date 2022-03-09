@@ -1,0 +1,79 @@
+
+import React, { Component, useState, useEffect } from "react";
+import { Navbar, NavDropdown, Nav, Container } from 'react-bootstrap';
+import { axiosClient } from "../api-common.js";
+import { useQuery } from "react-query";
+
+
+const api_base_url = axiosClient.defaults.baseURL
+
+
+
+
+
+
+function Navigation() {
+  const arrayOfSensors = []
+  const [isLoading, setLoading] = useState(false)
+  const [isError, setError] = useState(false)
+  const [data, setData] = useState({});
+  const json_returned = data.rows
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      setError(false);
+      setLoading(true);
+
+      try {
+        const response = await axiosClient.get(api_base_url + "zone_preferences");
+
+        setData(response.data);
+        
+      } catch (error) {
+        setError(true);
+      }
+      setLoading(false);
+    };
+    fetchData()
+  }, [] );
+
+// arrayOfSensors is populating but seems to keep on going
+
+
+  useEffect(() => {
+    if(typeof json_returned !== "undefined"){
+      //console.log(json_returned[0].sensor_name);
+      for (var i=0; i < json_returned.length; i++) {
+        arrayOfSensors.push(json_returned[i].sensor_name)};
+        console.log(typeof(arrayOfSensors));
+        console.log(arrayOfSensors);
+        console.log(typeof(json_returned));
+      }  
+    }, [data]);       
+//    }, [setData]);  // pass `value` as a dependency
+ 
+
+ return <div>
+  
+  <Navbar bg="light" expand="lg">
+    <Container>
+      <Navbar.Brand href="#home">RoboCrop</Navbar.Brand>
+      <Navbar.Toggle aria-controls="basic-navbar-nav" />
+      <Navbar.Collapse id="basic-navbar-nav">
+        <Nav className="me-auto">
+          <Nav.Link href="#home">Overview</Nav.Link>
+          <Nav.Link href="#link">Lighting</Nav.Link>
+          <NavDropdown title="Zones" id="basic-nav-dropdown">
+            <NavDropdown.Item onClick={() => alert('button click catched')} href="#action/3.1">Zone 1</NavDropdown.Item>
+            <NavDropdown.Item href="#action/3.2">Zone 2</NavDropdown.Item>
+            <NavDropdown.Item href="#action/3.3">Zone 3</NavDropdown.Item>
+          </NavDropdown>
+        </Nav>
+      </Navbar.Collapse>
+    </Container>
+    </Navbar>     
+    </div>
+}
+
+export default Navigation
+
