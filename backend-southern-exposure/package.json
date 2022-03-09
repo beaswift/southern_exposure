@@ -1,0 +1,19 @@
+{
+  "name": "restapi_nodejs_sqlite3",
+  "version": "1.0.0",
+  "description": "REST API code using nodejs, express and sqlite3",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Bethany Johnson",
+  "license": "ISC",
+  "dependencies": {
+    "@mapbox/node-pre-gyp": "^1.0.8",
+    "express": "^4.17.1",
+    "node-schedule": "^2.1.0",
+    "rpio": "^2.4.2",
+    "sqlite3": "^4.2.0",
+    "tar": "^6.1.11"
+  }
+}
