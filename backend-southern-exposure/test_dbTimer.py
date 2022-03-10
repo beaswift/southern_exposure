@@ -49,16 +49,17 @@ def threaded_function_start(name_var):
       print("oh God I gotta kill myself")
       break
     else:
-      schedule.run_pending()
       continue
+      
     
 
 def connect_db():
   global accepted_threads
   global threads
 
-  threading.Timer(0.95, connect_db).start()
+  threading.Timer(1, connect_db).start()
   try:
+    time.sleep(2)
     sqliteConnection = sqlite3.connect('./southern_exposure_database.db')
     cursor = sqliteConnection.cursor()
     sqlite_select_Query = "SELECT * FROM jobs;"
@@ -87,7 +88,7 @@ def connect_db():
       for each  in list(set(jobs_on_table) - set(accepted_threads)):
         accepted_threads.append(each)
         th = Thread(target = threaded_function_start(each))
-        #th.setDaemon(True)
+        th.setDaemon(True)
         #th.start()
         threads.append(th)
       for thread in threads:
