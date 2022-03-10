@@ -35,31 +35,32 @@ def worker(name_var):
     thisJob = schedule.every().minute.at(":23").do(job, name = name_var, pin = gpio_pin )
     print("reached "+name_var+ "multiprocess")
     while True:
-        schedule.run_pending()
         f = open("definitions.csv", "r")
         file_read = csv.reader(f)
         array_of_acceptable = list(file_read)
         processed_array = []
         for each in array_of_acceptable:
           processed_array.append(each[0])
+          #time.sleep(1)
         if name_var not in processed_array:
           print(name_var)
           print(processed_array)
           print("I'm not on the list!")
           print("oh God I gotta kill myself")
           schedule.cancel_job(thisJob)
+          #time.sleep(1)
           break
         else:
           schedule.run_pending()
           print("I'm alive " + name_var)
           continue
     
+
 def connect_db():
 
   threading.Timer(2, connect_db).start()
   try:
     sqliteConnection = sqlite3.connect('./southern_exposure_database.db')
-    schedule.run_pending()
     cursor = sqliteConnection.cursor()
     sqlite_select_Query = "SELECT * FROM jobs;"
     cursor.execute(sqlite_select_Query)
