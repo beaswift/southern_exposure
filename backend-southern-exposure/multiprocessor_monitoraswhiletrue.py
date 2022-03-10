@@ -56,42 +56,43 @@ def worker(name_var):
     
 def connect_db():
 
-  threading.Timer(2, connect_db).start()
-  try:
-    sqliteConnection = sqlite3.connect('./southern_exposure_database.db')
-    schedule.run_pending()
-    cursor = sqliteConnection.cursor()
-    sqlite_select_Query = "SELECT * FROM jobs;"
-    cursor.execute(sqlite_select_Query)
-    sqliteConnection.row_factory = sqlite3.Row
-    record = cursor.fetchall()
-    jobs_on_table = []
-    for row in record:
-      if len(row[2]) >= 4:
-        time_list = row[2].split(",")
-        for item in time_list:
-          schedule_item = row[1]+item+str(row[3])
-          jobs_on_table.append(schedule_item)
-    if sorted(jobs_on_table) != sorted(accepted_processes):
-      print("Jobs on Table Do Not Match Schedule")
-      for each in list(set(accepted_processes) - set(jobs_on_table)):
-        accepted_processes.remove(each)
-      for each  in list(set(jobs_on_table) - set(accepted_processes)):
-        accepted_processes.append(each)
-        p = multiprocessing.Process(target=worker, args=(each,))
-        jobs.append(p)
-        p.start()
-      with open('./definitions.csv', 'w') as outfile:
-        writer = csv.writer(outfile)
-        for x in accepted_processes : writer.writerow ([x])  
-    else:
-      cursor.close()
+  while True:
+    try:
+        sqliteConnection = sqlite3.connect('./southern_exposure_database.db')
+        schedule.run_pending()
+        cursor = sqliteConnection.cursor()
+        sqlite_select_Query = "SELECT * FROM jobs;"
+        cursor.execute(sqlite_select_Query)
+        sqliteConnection.row_factory = sqlite3.Row
+        record = cursor.fetchall()
+        jobs_on_table = []
+        for row in record:
+          if len(row[2]) >= 4:
+            time_list = row[2].split(",")
+            for item in time_list:
+                schedule_item = row[1]+item+str(row[3])
+                jobs_on_table.append(schedule_item)
+        if sorted(jobs_on_table) != sorted(accepted_processes):
+            print("Jobs on Table Do Not Match Schedule")
+            for each in list(set(accepted_processes) - set(jobs_on_table)):
+                accepted_processes.remove(each)
+            for each  in list(set(jobs_on_table) - set(accepted_processes)):
+                accepted_processes.append(each)
+                p = multiprocessing.Process(target=worker, args=(each,))
+                jobs.append(p)
+                p.start()
+            with open('./definitions.csv', 'w') as outfile:
+                writer = csv.writer(outfile)
+                for x in accepted_processes : writer.writerow ([x])  
+        else:
+            pass
+            cursor.close()
 
-  except sqlite3.Error as error:
-    print("Error while connecting to sqlite", error)
-  finally:
-    if sqliteConnection:
-      sqliteConnection.close()
+    except sqlite3.Error as error:
+        print("Error while connecting to sqlite", error)
+    finally:
+        if sqliteConnection:
+            sqliteConnection.close()
 
 if __name__ == '__main__':
     jobs = []  # this is the array that is keeping these multiprocesses alive
