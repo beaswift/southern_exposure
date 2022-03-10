@@ -16,15 +16,24 @@ for i in pinList:
     GPIO.output(i, GPIO.LOW)
 
 def job(name,pin):
-  if name.startswith("Test_Tomato_Sensor"):
-    seconds = 11
-  else:
-    seconds = 15
-  print("I worked for" + name)
-  GPIO.output(pin, GPIO.HIGH)
-  time.sleep(seconds)
-  GPIO.output(pin, GPIO.LOW)
-  #print(threading.currentThread().ident)
+    if name.startswith("Test_Tomato_Sensor"):
+        seconds = 11
+    else:
+        seconds = 15
+    print("I worked for" + name)
+    GPIO.output(pin, GPIO.HIGH)
+    time.sleep(seconds)
+    GPIO.output(pin, GPIO.LOW)
+    #print(threading.currentThread().ident)
+
+def is_valid_worker(name_var):
+    f = open("definitions.csv", "r")
+    file_read = csv.reader(f)
+    array_of_acceptable = list(file_read)
+    for each in array_of_acceptable:
+        if each[0] == name_var:
+            return true
+    return false
 
 def worker(name_var):
     """worker function"""
@@ -35,26 +44,17 @@ def worker(name_var):
     thisJob = schedule.every().minute.at(":23").do(job, name = name_var, pin = gpio_pin )
     print("reached "+name_var+ "multiprocess")
     while True:
-        f = open("definitions.csv", "r")
-        file_read = csv.reader(f)
-        array_of_acceptable = list(file_read)
-        processed_array = []
-        for each in array_of_acceptable:
-          processed_array.append(each[0])
-          #time.sleep(1)
-        if name_var not in processed_array:
-          print(name_var)
-          print(processed_array)
-          print("I'm not on the list!")
-          print("oh God I gotta kill myself")
-          schedule.cancel_job(thisJob)
-          #time.sleep(1)
-          break
+        if is_valid_worker(name_var):
+            schedule.run_pending()
+            print("I'm alive " + name_var)
+            continue
         else:
-          schedule.run_pending()
-          print("I'm alive " + name_var)
-          continue
-    
+            print("I'm not on the list!")
+            print("oh God I gotta kill myself")
+            schedule.cancel_job(thisJob)
+            #time.sleep(1)
+            break
+
 def get_valid_processes(sqliteConnection):
     try:
         cursor = sqliteConnection.cursor()
@@ -77,6 +77,7 @@ def connect_db(sqliteConnection):
     jobs = []  # this is the array that is keeping these multiprocesses alive
     accepted_processes = []  # this is the array of what should alive at any one time
     while True:
+        jobs_on_table = []
         try:
             jobs_on_table = get_valid_processes(sqliteConnection)
         except Exception as e:
