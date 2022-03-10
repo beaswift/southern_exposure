@@ -56,6 +56,7 @@ def worker(name_var):
             break
 
 def get_valid_processes(sqliteConnection):
+    jobs_on_table = []
     try:
         cursor = sqliteConnection.cursor()
         sqlite_select_Query = "SELECT * FROM jobs;"
@@ -77,7 +78,6 @@ def connect_db(sqliteConnection):
     jobs = []  # this is the array that is keeping these multiprocesses alive
     accepted_processes = []  # this is the array of what should alive at any one time
     while True:
-        jobs_on_table = []
         try:
             jobs_on_table = get_valid_processes(sqliteConnection)
         except Exception as e:
