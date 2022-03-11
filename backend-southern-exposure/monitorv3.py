@@ -27,13 +27,14 @@ def job(name,pin):
     #print(threading.currentThread().ident)
 
 def is_valid_worker(name_var):
-    f = open("definitions.csv", "r")
-    file_read = csv.reader(f)
-    array_of_acceptable = list(file_read)
-    for each in array_of_acceptable:
-        if each[0] == name_var:
-            return true
-    return false
+    # f = open("definitions.csv", "r")
+    # file_read = csv.reader(f)
+    array_of_acceptable = get_valid_processes(sqliteConnection)
+    if name_var in array_of_acceptable:
+        return True
+    return False
+    #print(array_of_acceptable)
+    #time.sleep(5)
 
 def worker(name_var):
     """worker function"""
@@ -56,6 +57,7 @@ def worker(name_var):
             break
 
 def get_valid_processes(sqliteConnection):
+    jobs_on_table = []
     try:
         cursor = sqliteConnection.cursor()
         sqlite_select_Query = "SELECT * FROM jobs;"
@@ -77,7 +79,6 @@ def connect_db(sqliteConnection):
     jobs = []  # this is the array that is keeping these multiprocesses alive
     accepted_processes = []  # this is the array of what should alive at any one time
     while True:
-        jobs_on_table = []
         try:
             jobs_on_table = get_valid_processes(sqliteConnection)
         except Exception as e:
@@ -93,9 +94,9 @@ def connect_db(sqliteConnection):
                 p = multiprocessing.Process(target=worker, args=(each,))
                 jobs.append(p)
                 p.start()
-            with open('./definitions.csv', 'w') as outfile:
-                writer = csv.writer(outfile)
-                for x in accepted_processes : writer.writerow ([x])  
+            #with open('./definitions.csv', 'w') as outfile:
+            #    writer = csv.writer(outfile)
+             #   for x in accepted_processes : writer.writerow ([x])  
         else:
             time.sleep(5)
 
