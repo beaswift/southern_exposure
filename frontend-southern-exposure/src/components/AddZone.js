@@ -1,6 +1,8 @@
 import React , { useState, useEffect }from 'react'
 import { axiosClient } from "../api-common.js";
 import { useQuery, useMutation } from "react-query";
+import FormValidation from "./FormValidation";
+
 const api_base_url = axiosClient.defaults.baseURL;
 
 //const response = await axiosClient.get(api_base_url + "zones");
@@ -26,6 +28,7 @@ function AddZone() {
     const [putZoneGPIOPin, setPutZoneGPIOPin] = useState("");
     const [putZoneResult, setPutZoneResult] = useState(null);
     const [checked, setChecked] = useState(false);
+    const [showWarning, setShowWarning] = useState(false);
 
     const handleChange = () => {
     setChecked(!checked);
@@ -70,19 +73,36 @@ function AddZone() {
     }
      }, [checked]);
 
+    function validate_string_of_list() {
+    let list_of_values = putIrrigationTime.split(',');
+    if ((list_of_values.every( x => !isNaN(x)) && (list_of_values.every( x => x.length === 4) ))){
+        return true;
+    }
+    else if ( putIrrigationTime === "" ){
+        return true;
+    }
+    else {
+    return false;
+    }
+    }
+
+
+
     useEffect(() => {
         if (isUpdatingZonePreference) setPutZoneResult("updating...");
         }, [isUpdatingZonePreference]);
     function putSensorData() {
-        if (putSensorName) {
+        if ((putSensorName) && (!isNaN(putZoneGPIOPin) && (validate_string_of_list()))) {
             try {
             updateZonePreference();
+            setShowWarning(false);
             refetch();
             } catch (err) {
             setPutZoneResult(formatResponse(err));
             }
-        }
-    }
+        } else {
+            setShowWarning(true);
+        }}
 
     function handleCancelNewOrUpdate(e) {
         e.preventDefault();
@@ -129,6 +149,7 @@ function AddZone() {
 
         <div >
         <h1>Create New Zone</h1>  
+        {showWarning === true && <FormValidation />}
             <div className="card-body">  
             <div className="form-group">
                 <input
