@@ -5,7 +5,6 @@ import time
 import schedule
 import RPi.GPIO as GPIO
 import ast
-import csv
 
 pinList = [13,15]
 
@@ -27,8 +26,6 @@ def job(name,pin):
     #print(threading.currentThread().ident)
 
 def is_valid_worker(name_var):
-    # f = open("definitions.csv", "r")
-    # file_read = csv.reader(f)
     array_of_acceptable = get_valid_processes(sqliteConnection)
     if name_var in array_of_acceptable:
         return True
@@ -94,9 +91,6 @@ def connect_db(sqliteConnection):
                 p = multiprocessing.Process(target=worker, args=(each,))
                 jobs.append(p)
                 p.start()
-            #with open('./definitions.csv', 'w') as outfile:
-            #    writer = csv.writer(outfile)
-             #   for x in accepted_processes : writer.writerow ([x])  
         else:
             time.sleep(5)
 
