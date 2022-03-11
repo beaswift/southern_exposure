@@ -1,6 +1,8 @@
 import React , { useState, useEffect }from 'react'
 import { axiosClient } from "../api-common.js";
 import { useQuery, useMutation } from "react-query";
+import FormValidation from "./FormValidation";
+
 const api_base_url = axiosClient.defaults.baseURL;
 
 
@@ -20,6 +22,7 @@ function ZoneInfo(props) {
   const [putZoneResult, setPutZoneResult] = useState(null);
   const [deleteZoneResult, setDeleteZoneResult] = useState(null);  
   const [checked, setChecked] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
 
   const formatResponse = (res) => {
     return JSON.stringify(res, null, 2);
@@ -83,16 +86,33 @@ function ZoneInfo(props) {
     if (isUpdatingZonePreference) setPutZoneResult("updating...");
   }, [isUpdatingZonePreference]);
 
+function validate_string_of_list() {
+  let list_of_values = putIrrigationTime.split(',');
+ if ((list_of_values.every( x => !isNaN(x)) && (list_of_values.every( x => x.length === 4) ))){
+   return true;
+ }
+ else if ( putIrrigationTime === "" ){
+   return true;
+ }
+ else {
+  return false;
+}
+}
+
   function putSensorData() {
-    if (putSensorName) {
+    if ((putSensorName) && (!isNaN(putZoneGPIOPin) && (validate_string_of_list()))) {
       try {
         updateZonePreference();
         changeDisplay();
+        setShowWarning(false);
       } catch (err) {
         setPutZoneResult(formatResponse(err));
       }
-    }
-  }
+     } else {
+      setShowWarning(true);
+     }
+    } 
+  
 
   function deletionActual() {
     try {
@@ -214,7 +234,6 @@ function ZoneInfo(props) {
           <br />
           <br />
 
-
           <button className="btn btn-sm btn-primary" onClick={deleteZone}>
           
             Delete Zone
@@ -223,6 +242,7 @@ function ZoneInfo(props) {
     </div>
     <div style={{display: displayStateUpdates }}>
       <h2>Update Zone Control Settings</h2>  
+      {showWarning === true && <FormValidation />}
           <div className="card-body">  
           <div className="form-group">
             <input
@@ -296,7 +316,7 @@ function ZoneInfo(props) {
                 className="form-control"
                 placeholder="24hr format-Example: 0800 *OR* For Multiple: 0800,1500"
               />
-            </div>
+          </div>
     
           <div className="form-group">
           <label>
