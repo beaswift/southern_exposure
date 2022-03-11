@@ -1,6 +1,7 @@
 import React , { useState, useEffect }from 'react'
 import { axiosClient } from "../api-common.js";
 import { useQuery, useMutation } from "react-query";
+import FormValidation from "./FormValidation";
 
 const api_base_url = axiosClient.defaults.baseURL;
 
@@ -69,6 +70,7 @@ function handleSubmit(e,lighting) {
     const [putLightingGPIOPin, setPutLightingGPIOPin] = useState("");
     const [putLightingResult, setPutLightingResult] = useState(null);
     const [deleteLightingResult, setDeleteLightingResult] = useState("");  
+    const [showWarning, setShowWarning] = useState(false);
 
     const { isLoading: isUpdatingLightingPreference, mutate: updateLightingPreference } = useMutation(
     async () => {
@@ -120,30 +122,38 @@ function handleSubmit(e,lighting) {
       }
     );
 
+    function validate_string_of_list() {
+      let list_of_values = putLightingTimes.split(',');
+      if ((list_of_values.every( x => !isNaN(x)) && (list_of_values.every( x => x.length === 4) ))){
+          return true;
+      }
+      else if ( putLightingTimes === "" ){
+          return true;
+      }
+      else {
+      return false;
+      }
+      }
+  
+
+
     useEffect(() => {
     if (isUpdatingLightingPreference) setPutLightingResult("updating...");
     }, [isUpdatingLightingPreference]);
     function putLightingData() {
-    if (putLightingName) {
+    if ((putLightingName) && (!isNaN(putLightingGPIOPin) && (validate_string_of_list()))) {
         try {
         updateLightingPreference();
         setDisplayState("none");
+        setShowWarning(false);
         } catch (err) {
         setPutLightingResult(formatResponse(err));
         }
-    }
-    }
+      } else{
+        setShowWarning(true);
+      }}
 
-  // useEffect(() => { 
-  //     refetch();
-  //   }, [deleteLightingResult, refetch]);
-
-
-  // useEffect(() => { 
-  //   refetch();
-  // }, [putLightingResult, refetch]);
-
-    return (
+      return (
         <div>
         <div className="LightingInfo">
             
@@ -160,7 +170,8 @@ function handleSubmit(e,lighting) {
         </div>
 
         <div className="card-body"style={{display: displayState }}>    {/* // This will hide it, need to add matching </div> tag below where noted & need to conditionally set via setState on click handlers handleSubmit & handleSubmitNew & have the update button set it back to hidden  */}         
-        <div className="card-header">Update Lighting Controls</div>  
+        <div className="card-header">Update Lighting Controls</div> 
+        {showWarning === true && <FormValidation />} 
         <div className="card-body">  
         <div className="form-group">
         <label>
@@ -215,6 +226,7 @@ function handleSubmit(e,lighting) {
           Update Lighting Controls
         </button>
         </div>
+        
         <div className="card-body">
         <button
           className="btn btn-sm btn-warning ml-2"
