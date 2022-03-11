@@ -21,26 +21,28 @@ const HTTP_PORT = 8000
 
 
 // Setting up gpio pin functions
-var rpio_options = {
-    gpiomem: true,          /* Use /dev/gpiomem */
-    mapping: 'physical',    /* Use the P1-P40 numbering scheme */
-    mock: undefined,        /* Emulate specific hardware in mock mode */
-    close_on_exit: true,    /* On node process exit automatically close rpio */
-}
+// var rpio_options = {
+//     gpiomem: true,          /* Use /dev/gpiomem */
+//     mapping: 'physical',    /* Use the P1-P40 numbering scheme */
+//     mock: undefined,        /* Emulate specific hardware in mock mode */
+//     close_on_exit: true,    /* On node process exit automatically close rpio */
+// }
 
-rpio.init([rpio_options])
+//rpio.init([rpio_options])
 
 // const gpio_array = [15,13,11];
 // gpio_array.forEach(element => {
 //     rpio.open(element, rpio.OUTPUT, rpio.LOW);
 // });
 
-// const job = schedule.scheduleJob('*/3 * * * * *', function(){
-//     let job_name = 'led 1'
-//     let pin = 15
-//     let seconds_to_run = 2
-//     light_led(pin,seconds_to_run,job_name)
-//   });
+// function light_led(pin,seconds_to_run,job_name) {
+//     console.log("Starting " + job_name)
+    
+//     rpio.write(pin, rpio.HIGH);
+//     setTimeout(() => {rpio.write(pin, rpio.LOW)
+//     console.log("Ending " + job_name)}, seconds_to_run * 1000);
+    
+// };
 
 
 
@@ -199,12 +201,12 @@ function update_zone_preferences_check(sensor_name_var){
 
 async function update_readings(reqBody, res, next){
     console.log('running zone preference existence check..');
-    let sensor_name_var = reqBody.sensor_name;
+    let sensor_name_var = reqBody.sensor_name.replace("|","_");
     const result = await update_zone_preferences_check(sensor_name_var);
     console.log(result)
     let current_time = new Date().toLocaleString().replace(',','');
     db.run("INSERT INTO readings (sensor_name, capacity, time) VALUES (?,?,?)",
-        [reqBody.sensor_name, reqBody.capacity, current_time],
+        [reqBody.sensor_name.replace("|","_"), reqBody.capacity, current_time],
         function (err, result) {
             console.log(reqBody)
             if (err) {
@@ -241,7 +243,7 @@ function update_jobs_table_with_lighting_job(job_name_type,lighting_times_var,li
 async function update_lighting(reqBody, res, next){
     console.log('running update of jobs table for lighting..');
     let job_type = "_lighting";
-    let lighting_name_var = reqBody.lighting_name;
+    let lighting_name_var = reqBody.lighting_name.replace("|","_");
     let lighting_times_var = reqBody.lighting_times;
     let job_name_type = lighting_name_var + job_type;
     let lighting_length_var = reqBody.lighting_length * 60000; // minutes to milliseconds
@@ -250,7 +252,7 @@ async function update_lighting(reqBody, res, next){
     //console.log(result)
     db.run("INSERT INTO lighting_preferences (lighting_name, lighting_times, lighting_length, gpio_pin) VALUES (?,?,?,?)\
      ON CONFLICT(lighting_name) DO UPDATE SET lighting_times=excluded.lighting_times,lighting_length=excluded.lighting_length,gpio_pin=excluded.gpio_pin;", 
-     [reqBody.lighting_name, reqBody.lighting_times,reqBody.lighting_length, reqBody.gpio_pin],
+     [reqBody.lighting_name.replace("|","_"), reqBody.lighting_times,reqBody.lighting_length, reqBody.gpio_pin],
        function (err, result) {
            console.log(reqBody)
            if (err) {
@@ -287,7 +289,7 @@ function update_jobs_table_with_watering_job(job_name_type,irrigation_time_var,i
 
 async function update_zones(reqBody, res, next){
     let job_type = "_watering";
-    let sensor_name_var = reqBody.sensor_name;
+    let sensor_name_var = reqBody.sensor_name.replace("|","_");
     let irrigation_time_var = reqBody.irrigation_time;
     let job_name_type = sensor_name_var + job_type;
     let irrigation_length_var = reqBody.irrigation_length * 1000; //seconds to milliseconds
@@ -295,7 +297,7 @@ async function update_zones(reqBody, res, next){
     const result = await update_jobs_table_with_watering_job(job_name_type,irrigation_time_var,irrigation_length_var,gpio_pin_var);
     db.run("INSERT INTO zone_preferences (sensor_name, minimum_moisture, irrigation_trigger_by_moisture, irrigation_length, irrigation_interval, irrigation_time, gpio_pin) VALUES (?,?,?,?,?,?,?)\
     ON CONFLICT(sensor_name) DO UPDATE SET minimum_moisture=excluded.minimum_moisture,irrigation_trigger_by_moisture=excluded.irrigation_trigger_by_moisture,irrigation_length=excluded.irrigation_length,irrigation_interval=excluded.irrigation_interval,irrigation_time=excluded.irrigation_time,gpio_pin=excluded.gpio_pin;", 
-       [reqBody.sensor_name, reqBody.minimum_moisture, reqBody.irrigation_trigger_by_moisture, reqBody.irrigation_length, reqBody.irrigation_interval, reqBody.irrigation_time, reqBody.gpio_pin],
+       [reqBody.sensor_name.replace("|","_"), reqBody.minimum_moisture, reqBody.irrigation_trigger_by_moisture, reqBody.irrigation_length, reqBody.irrigation_interval, reqBody.irrigation_time, reqBody.gpio_pin],
        function (err, result) {
            //console.log(reqBody)
            if (err) {
