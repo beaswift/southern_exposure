@@ -64,7 +64,7 @@ def get_valid_processes(sqliteConnection):
             if len(row[2]) >= 4:
                 time_list = row[2].split(",")
                 for item in time_list:
-                    schedule_item = row[1]+"|"+item+"|"+str(row[3])+"|"+str(row[4])
+                    schedule_item = row[1]+"|"+item+"|"+str(row[3])
                     jobs_on_table.append(schedule_item)
         cursor.close()
         return jobs_on_table
