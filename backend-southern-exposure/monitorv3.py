@@ -6,40 +6,39 @@ import schedule
 import RPi.GPIO as GPIO
 import ast
 
-pinList = [13,15]
-
+pinList = [3,5,7,8]
+GPIO.setwarnings(False)
+ 
 GPIO.setmode(GPIO.BOARD)
 
 for i in pinList:
-    GPIO.setup(i, GPIO.OUT)
-    GPIO.output(i, GPIO.LOW)
+   GPIO.setup(i, GPIO.OUT)
+   GPIO.output(i, GPIO.HIGH)
 
-def job(name,pin):
-    if name.startswith("Test_Tomato_Sensor"):
-        seconds = 11
-    else:
-        seconds = 15
-    print("I worked for" + name)
+def job(job_length,pin):
+    print("I'm working for pin #"+str(pin))
+    GPIO.setup(pin, GPIO.OUT)
     GPIO.output(pin, GPIO.HIGH)
-    time.sleep(seconds)
     GPIO.output(pin, GPIO.LOW)
-    #print(threading.currentThread().ident)
+    time.sleep(job_length)
+    GPIO.output(pin, GPIO.HIGH)
+    GPIO.cleanup(pin)
 
 def is_valid_worker(name_var):
     array_of_acceptable = get_valid_processes(sqliteConnection)
     if name_var in array_of_acceptable:
         return True
     return False
-    #print(array_of_acceptable)
-    #time.sleep(5)
 
 def worker(name_var):
     """worker function"""
-    if name_var.startswith("Test_Tomato_Sensor"):
-        gpio_pin = 13
-    else:
-        gpio_pin = 15
-    thisJob = schedule.every().minute.at(":23").do(job, name = name_var, pin = gpio_pin )
+    worker_def_array = name_var.split("|")
+    hour = worker_def_array[1][:2]
+    minute = worker_def_array[1][2:4]
+    gpio_pin = int(worker_def_array[3])
+    job_length_variable = int(worker_def_array[2])
+    # Split name_var here into it's parts for usage:
+    thisJob = schedule.every().day.at(hour+":"+minute).do(job, job_length = job_length_variable, pin = gpio_pin)
     print("reached "+name_var+ "multiprocess")
     while True:
         if is_valid_worker(name_var):
@@ -65,7 +64,7 @@ def get_valid_processes(sqliteConnection):
             if len(row[2]) >= 4:
                 time_list = row[2].split(",")
                 for item in time_list:
-                    schedule_item = row[1]+item+str(row[3])
+                    schedule_item = row[1]+"|"+item+"|"+str(row[3])+"|"+str(row[4])
                     jobs_on_table.append(schedule_item)
         cursor.close()
         return jobs_on_table

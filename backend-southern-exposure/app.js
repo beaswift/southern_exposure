@@ -20,35 +20,6 @@ const HTTP_PORT = 8000
 
 
 
-// Setting up gpio pin functions
-// var rpio_options = {
-//     gpiomem: true,          /* Use /dev/gpiomem */
-//     mapping: 'physical',    /* Use the P1-P40 numbering scheme */
-//     mock: undefined,        /* Emulate specific hardware in mock mode */
-//     close_on_exit: true,    /* On node process exit automatically close rpio */
-// }
-
-//rpio.init([rpio_options])
-
-// const gpio_array = [15,13,11];
-// gpio_array.forEach(element => {
-//     rpio.open(element, rpio.OUTPUT, rpio.LOW);
-// });
-
-// function light_led(pin,seconds_to_run,job_name) {
-//     console.log("Starting " + job_name)
-    
-//     rpio.write(pin, rpio.HIGH);
-//     setTimeout(() => {rpio.write(pin, rpio.LOW)
-//     console.log("Ending " + job_name)}, seconds_to_run * 1000);
-    
-// };
-
-
-
-
-
-
 const db = new sqlite3.Database('./southern_exposure_database.db', (err) => {
     if (err) {
         console.error("Error opening database " + err.message);
@@ -112,14 +83,14 @@ const db = new sqlite3.Database('./southern_exposure_database.db', (err) => {
 });
 
 
-function turn_on_gpio(pin,milliseconds_to_run,job_name) {
-    console.log("Starting " + job_name)
+// function turn_on_gpio(pin,milliseconds_to_run,job_name) {
+//     console.log("Starting " + job_name)
     
-    rpio.write(pin, rpio.HIGH);
-    setTimeout(() => {rpio.write(pin, rpio.LOW)
-    console.log("Ending " + job_name)}, milliseconds_to_run);
+//     rpio.write(pin, rpio.HIGH);
+//     setTimeout(() => {rpio.write(pin, rpio.LOW)
+//     console.log("Ending " + job_name)}, milliseconds_to_run);
     
-};
+// };
 
 
 // get api endpoints
@@ -246,7 +217,7 @@ async function update_lighting(reqBody, res, next){
     let lighting_name_var = reqBody.lighting_name.replace("|","_");
     let lighting_times_var = reqBody.lighting_times;
     let job_name_type = lighting_name_var + job_type;
-    let lighting_length_var = reqBody.lighting_length * 60000; // minutes to milliseconds
+    let lighting_length_var = reqBody.lighting_length * 60; // minutes to seconds
     let gpio_pin_var = reqBody.gpio_pin;
     const result = await update_jobs_table_with_lighting_job(job_name_type,lighting_times_var,lighting_length_var,gpio_pin_var);   
     //console.log(result)
@@ -284,15 +255,12 @@ function update_jobs_table_with_watering_job(job_name_type,irrigation_time_var,i
     })
 };
 
-
-
-
 async function update_zones(reqBody, res, next){
     let job_type = "_watering";
     let sensor_name_var = reqBody.sensor_name.replace("|","_");
     let irrigation_time_var = reqBody.irrigation_time;
     let job_name_type = sensor_name_var + job_type;
-    let irrigation_length_var = reqBody.irrigation_length * 1000; //seconds to milliseconds
+    let irrigation_length_var = reqBody.irrigation_length; //coming in as seconds
     let gpio_pin_var = reqBody.gpio_pin;
     const result = await update_jobs_table_with_watering_job(job_name_type,irrigation_time_var,irrigation_length_var,gpio_pin_var);
     db.run("INSERT INTO zone_preferences (sensor_name, minimum_moisture, irrigation_trigger_by_moisture, irrigation_length, irrigation_interval, irrigation_time, gpio_pin) VALUES (?,?,?,?,?,?,?)\
@@ -310,55 +278,9 @@ async function update_zones(reqBody, res, next){
        });
 }; 
 
-// function check_schedule(row){
-//     scheduledJobsList = schedule.scheduledJobs;
-//     keys = Object.keys(scheduledJobsList);
-//     if (keys.length === 0) {
-//         console.log("no events")
-//         console.log("If No Events, can create one here?");
-//         console.log(row.job_name_type);
-//         row.job_time_of_day.split(',').forEach(
-//             time =>
-//             date = "*,*,"+time.substring(0,2)+"",*,*,*"
-//             schedule.scheduleJob(row.job_name_type+time, date, function() {
-//             }));
-
-//         ;
-       
-//     }
-//     else {
-//         console.log(keys)
-        
-//     };
-// };
-
-
-// function lookup_jobs(){
-//     return new Promise( (resolve, reject) => {
-//         db.all("SELECT * FROM jobs", [], (err, rows) => {
-//             if (err) {
-//                 res.status(400).json({ "error": err.message });
-//                 return;
-//             }
-//             rows.forEach( 
-//                 row =>
-//                 check_schedule(row)
-//                 // row.job_time_of_day.split(',').forEach( time => 
-//                 //     console.log(row.job_name_type, time))            
-//                 );
-                
-                
-                
-//                 //console.log(row.job_name_type, row.job_time_of_day, row.job_length));
-//             //console.log(rows); // Successfully Listing Jobs.  <<<<---- This Line is where we should
-//             // be able to iterate on rows and load/edit scheduled jobs. <<<-------
-//         });
-// })
-// };
-
-async function lookup_jobs_async(){
-    const result = await lookup_jobs();
-}; 
+// async function lookup_jobs_async(){
+//     const result = await lookup_jobs();
+// }; 
 
 app.put("/zones/", (req, res, next) => {
     let reqBody = req.body;
