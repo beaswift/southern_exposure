@@ -1,2 +1,2 @@
 # southern_exposure
- gardenning software
+ gardening software
