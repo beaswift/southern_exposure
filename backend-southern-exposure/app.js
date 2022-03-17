@@ -79,6 +79,18 @@ const db = new sqlite3.Database('./southern_exposure_database.db', (err) => {
                 console.log("Table jobs already exists.");
             } 
         });
+
+        db.run('CREATE TABLE IF NOT EXISTS immediate_jobs( \
+            job_id INTEGER PRIMARY KEY NOT NULL,\
+            job_length INTEGER,\
+            job_gpio_pin INTEGER,\
+            job_done INTEGER\
+        )', (err) => {
+            if (err) {
+                console.log(err);
+                console.log("Table immediate_jobs already exists.");
+            } 
+        });
     }
 });
 
@@ -242,6 +254,22 @@ app.put("/lighting_preferences/", (req, res, next) => {
     update_lighting(reqBody,res, next);
 });
 
+//Creation of immedidate jobs put 
+app.put("/immediate_jobs/", (req, res, next) => {
+    db.run("INSERT INTO immediate_jobs (job_length, job_gpio_pin, job_done) VALUES (?,?,?)",
+    [req.job_length, req.job_gpio_pin, req.job_done],
+    function (err, result) {
+        console.log(req.body)
+        if (err) {
+            res.status(400).json({ "error": err.message })
+            return;
+        }
+        res.status(201).json({
+            "immediate job creation": "Success"
+        })
+    });
+});
+
 function update_jobs_table_with_watering_job(job_name_type,irrigation_time_var,irrigation_length_var,gpio_pin_var){
     return new Promise( (resolve, reject) => {
         //console.log(job_name_type,irrigation_time_var,irrigation_length_var,gpio_pin_var)
@@ -346,3 +374,4 @@ app.delete("/lighting_preferences/:lighting_preference_name", (req, res, next) =
 app.listen(HTTP_PORT, () => {
     console.log("Server is listening on port " + HTTP_PORT);
 });
+
