@@ -71,6 +71,7 @@ def get_valid_processes(sqliteConnection):
         raise error
 
 def get_immediate_jobs(sqliteConnection):
+
     immediate_jobs = []
     try:
         cursor = sqliteConnection.cursor()
@@ -84,13 +85,16 @@ def get_immediate_jobs(sqliteConnection):
             job_id = row[0]
             job_length = row[1]
             job_pin = row[2]
-            print("Job Length is: " + str(job_length) + " Job Pin is: " + str(job_pin))
-            job(job_length,job_pin)
+            #print("Job Length is: " + str(job_length) + " Job Pin is: " + str(job_pin))
+            p = multiprocessing.Process(target=job, args=(job_length,job_pin))
+            immediate_jobs.append(p)
+            p.start()
+            #job(job_length,job_pin)
             cursor = sqliteConnection.cursor()
             sqlite_update_Query = "UPDATE immediate_jobs SET job_done = 1 where job_id = " + str(job_id) + ";"
             cursor.execute(sqlite_update_Query)
             sqliteConnection.commit()
-            print("Cleared Immediate job for pin " + str(job_pin)+ " of table, as completed.")
+            #print("Cleared Immediate job for pin " + str(job_pin)+ " of table, as completed.")
         cursor.close()
     except sqlite3.Error as error:
         raise error
