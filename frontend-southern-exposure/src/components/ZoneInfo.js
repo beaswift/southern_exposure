@@ -4,6 +4,9 @@ import { useQuery, useMutation } from "react-query";
 import FormValidation from "./FormValidation";
 
 const api_base_url = axiosClient.defaults.baseURL;
+//const Gpio = require('onoff').Gpio;
+//const gpio = require("gpio");
+//const Gpio = require('pigpio').Gpio;
 
 
 function ZoneInfo(props) {
@@ -11,7 +14,7 @@ function ZoneInfo(props) {
   const [displayStateUpdates, setDisplayStateUpdates] = useState('none');
   const [moistureControlSetting, setMoistureControlSetting] = useState("Unknown");
   const [deleteSensorName, setDeleteSensorName] = useState("");
-  const [deletePreferenceID, setDeletePreferenceID] = useState("");
+  //const [deletePreferenceID, setDeletePreferenceID] = useState("");
   const [putSensorName, setPutSensorName] = useState("");
   const [putIrrigationTriggerByMoisture, setPutIrrigationTriggerByMoisture] = useState(false);
   const [putMinimumMoisture, setPutMinimumMoisture] = useState(180);
@@ -23,6 +26,7 @@ function ZoneInfo(props) {
   const [deleteZoneResult, setDeleteZoneResult] = useState(null);  
   const [checked, setChecked] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
+
 
   const formatResponse = (res) => {
     return JSON.stringify(res, null, 2);
@@ -42,7 +46,7 @@ function ZoneInfo(props) {
         sensor_name: putSensorName,
         minimum_moisture: putMinimumMoisture,
         irrigation_trigger_by_moisture: putIrrigationTriggerByMoisture,
-        irrigation_length: putIrrigationLength,
+        irrigation_length: Math.round(putIrrigationLength),
         irrigation_interval: putIrrigationInterval,
         irrigation_time: putIrrigationTime,
         gpio_pin: putZoneGPIOPin     
@@ -81,7 +85,32 @@ function ZoneInfo(props) {
       },
     }
   );
-    
+  
+  
+  const { mutate: updateImmediateJobs, } = useMutation(
+    async () => {
+      return await axiosClient.put(api_base_url + "immediate_jobs/", {      
+        job_length: Math.round(putIrrigationLength),
+        job_gpio_pin: putZoneGPIOPin,
+        job_done: 0,     
+      });
+    },
+    {
+      onSuccess: (res) => {
+        console.log("Watering "+ putZoneGPIOPin, putIrrigationLength, putZoneGPIOPin)
+        const result = {
+          status: res.status + "-" + res.statusText,
+          headers: res.headers,
+          data: res.data,
+        };
+        console.log(result)
+      },
+      onError: (err) => {
+        console.log("Error Watering "+putZoneGPIOPin)
+      },
+    }
+  );
+
   useEffect(() => {
     if (isUpdatingZonePreference) setPutZoneResult("updating...");
   }, [isUpdatingZonePreference]);
@@ -96,7 +125,7 @@ function validate_string_of_list() {
  }
  else {
   return false;
-}
+ }
 }
 
   function putSensorData() {
@@ -112,6 +141,8 @@ function validate_string_of_list() {
       setShowWarning(true);
      }
     } 
+
+
   
 
   function deletionActual() {
@@ -133,8 +164,7 @@ function validate_string_of_list() {
       window.confirm("Are you sure you want to delete " + putSensorName + "? \n\nIf this Zone was created automatically by a sensor you have set up,\nit will reappear if that sensor is still active." ) && deletionActual();
     }
   }
- 
-  
+   
   useEffect(() => { 
     refetch();
   }, [props.zoneToDisplay, deleteZoneResult, refetch]);
@@ -155,7 +185,7 @@ function validate_string_of_list() {
   useEffect(() => {
         if(typeof data !== "undefined")
     {
-      setDeletePreferenceID(data.data.rows.zone_preference_id);
+      //setDeletePreferenceID(data.data.rows.zone_preference_id);
       setDeleteSensorName(data.data.rows.sensor_name);
       setPutSensorName(data.data.rows.sensor_name);
       setPutMinimumMoisture(data.data.rows.minimum_moisture);
@@ -178,9 +208,7 @@ function validate_string_of_list() {
     if (isUpdatingZonePreference) setPutZoneResult("updating...");
   }, [isUpdatingZonePreference]);
   
-
-
-
+  
   function handleCancelNewOrUpdateZone(e) {
     e.preventDefault();
     setPutMinimumMoisture(data.data.rows.minimum_moisture);
@@ -198,6 +226,10 @@ function validate_string_of_list() {
     setChecked(true);
     }
   }
+
+  // function waterNow() {
+  //   console.log("Water Now! Pin: "+ putZoneGPIOPin)
+  // }
 
   function changeDisplay() {
     if (displayStateCurrentSettings === "block"){
@@ -227,10 +259,24 @@ function validate_string_of_list() {
             <p>Irrigation time of Day: {data.data.rows.irrigation_time}</p>
             <p>GPIO Pin: {data.data.rows.gpio_pin}</p></div>
           )}
+        <div>
+        <button
+          className="btn btn-sm btn-warning ml-2"
+          onClick={updateImmediateJobs}
+        >
+          Water Now
+        </button>
+        </div>
+        <br />
+        <br />
+        <br />
 
+
+          <div>
           <button className="btn btn-sm btn-primary" onClick={changeDisplay}>
             Update Zone Settings
           </button>
+          </div>
           <br />
           <br />
 
@@ -341,6 +387,7 @@ function validate_string_of_list() {
         >
           Cancel
         </button>
+
     </div>
   
   </div>
