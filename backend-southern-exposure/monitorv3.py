@@ -48,7 +48,6 @@ def worker(name_var):
         else:
             print("I'm not on the list!")
             print("oh God I gotta kill myself")
-            schedule.cancel_job(thisJob)
             #time.sleep(1)
             break
 
@@ -75,14 +74,23 @@ def get_immediate_jobs(sqliteConnection):
     immediate_jobs = []
     try:
         cursor = sqliteConnection.cursor()
-        sqlite_select_Query = "SELECT * FROM immediate_jobs;"# where job_done = 0;"
+        sqlite_select_Query = "SELECT * FROM immediate_jobs where job_done = 0;"
         cursor.execute(sqlite_select_Query)
         sqliteConnection.row_factory = sqlite3.Row
         record = cursor.fetchall()
-        print("Inside get_immediate_jobs")
+        #print("Inside get_immediate_jobs")
+        #print(record)
         for row in record:
-            print("Immediate Job: ")
-            print(row.[0],row[1],row[2])
+            job_id = row[0]
+            job_length = row[1]
+            job_pin = row[2]
+            print("Job Length is: " + str(job_length) + " Job Pin is: " + str(job_pin))
+            job(job_length,job_pin)
+            cursor = sqliteConnection.cursor()
+            sqlite_update_Query = "UPDATE immediate_jobs SET job_done = 1 where job_id = " + str(job_id) + ";"
+            cursor.execute(sqlite_update_Query)
+            sqliteConnection.commit()
+            print("Cleared Immediate job for pin " + str(job_pin)+ " of table, as completed.")
         cursor.close()
     except sqlite3.Error as error:
         raise error
@@ -93,7 +101,7 @@ def connect_db(sqliteConnection):
     while True:
         try:
             jobs_on_table = get_valid_processes(sqliteConnection)
-            print("Getting Immediate Jobs")
+            #print("Getting Immediate Jobs")
             get_immediate_jobs(sqliteConnection)
         except Exception as e:
             raise e
