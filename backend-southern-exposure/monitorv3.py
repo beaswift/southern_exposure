@@ -71,12 +71,30 @@ def get_valid_processes(sqliteConnection):
     except sqlite3.Error as error:
         raise error
 
+def get_immediate_jobs(sqliteConnection):
+    immediate_jobs = []
+    try:
+        cursor = sqliteConnection.cursor()
+        sqlite_select_Query = "SELECT * FROM immediate_jobs;"# where job_done = 0;"
+        cursor.execute(sqlite_select_Query)
+        sqliteConnection.row_factory = sqlite3.Row
+        record = cursor.fetchall()
+        print("Inside get_immediate_jobs")
+        for row in record:
+            print("Immediate Job: ")
+            print(row.[0],row[1],row[2])
+        cursor.close()
+    except sqlite3.Error as error:
+        raise error
+
 def connect_db(sqliteConnection):
     jobs = []  # this is the array that is keeping these multiprocesses alive
     accepted_processes = []  # this is the array of what should alive at any one time
     while True:
         try:
             jobs_on_table = get_valid_processes(sqliteConnection)
+            print("Getting Immediate Jobs")
+            get_immediate_jobs(sqliteConnection)
         except Exception as e:
             raise e
             return
