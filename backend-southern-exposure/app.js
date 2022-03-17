@@ -256,8 +256,8 @@ app.put("/lighting_preferences/", (req, res, next) => {
 
 //Creation of immedidate jobs put 
 app.put("/immediate_jobs/", (req, res, next) => {
-    db.run("INSERT INTO immediate_jobs (job_length, job_gpio_pin, job_done) VALUES (?,?,?)",
-    [req.job_length, req.job_gpio_pin, req.job_done],
+    db.run("INSERT INTO immediate_jobs (job_length, job_gpio_pin, job_done) VALUES (?,?,?);",
+    [req.body.job_length, req.body.job_gpio_pin, req.body.job_done],
     function (err, result) {
         console.log(req.body)
         if (err) {
@@ -374,4 +374,3 @@ app.delete("/lighting_preferences/:lighting_preference_name", (req, res, next) =
 app.listen(HTTP_PORT, () => {
     console.log("Server is listening on port " + HTTP_PORT);
 });
-
