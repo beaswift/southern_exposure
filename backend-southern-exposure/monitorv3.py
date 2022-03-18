@@ -2,6 +2,7 @@ import sqlite3
 import multiprocessing
 import threading
 import time
+from datetime import datetime
 import schedule
 import RPi.GPIO as GPIO
 import ast
@@ -16,7 +17,6 @@ for i in pinList:
    GPIO.output(i, GPIO.HIGH)
 
 def job(job_length,pin,sensor_name):
-    print("I'm working for pin #"+str(pin))
     GPIO.setup(pin, GPIO.OUT)
     GPIO.output(pin, GPIO.HIGH)
     GPIO.output(pin, GPIO.LOW)
@@ -41,11 +41,10 @@ def worker(name_var):
     job_length_variable = int(worker_def_array[2])
     # Split name_var here into it's parts for usage:
     thisJob = schedule.every().day.at(hour+":"+minute).do(job, job_length = job_length_variable, pin = gpio_pin, sensor_name=sensor_name)
-    print("reached "+name_var+ "multiprocess")
+    #print("reached "+name_var+ "multiprocess")
     while True:
         if is_valid_worker(name_var):
             schedule.run_pending()
-            #print("Hi My name is: " + sensor_name)
             #print("I'm alive " + name_var)
             continue
         else:
@@ -55,12 +54,9 @@ def worker(name_var):
             break
 
 def log_watering_time(sqliteConnection,sensor_name):
-    print("Made it into log_watering_time")
-    print(sensor_name)
     try:
         cursor = sqliteConnection.cursor()
-        sqlite_update_Query = "UPDATE zone_preferences SET last_watering = time('now','localtime') WHERE sensor_name = "+sensor_name+";"
-        cursor.execute(sqlite_update_Query)
+        cursor.execute("UPDATE zone_preferences SET last_watering = datetime('now','localtime') WHERE sensor_name = ?", (sensor_name,));
         sqliteConnection.commit()
         cursor.close()
     except sqlite3.Error as error:
@@ -85,34 +81,46 @@ def get_valid_processes(sqliteConnection):
     except sqlite3.Error as error:
         raise error
 
-# def get _sensor_reading_jobs(sqliteConnection):
-#     sensor_reading_jobs = []
-#     try:
-#         cursor = sqliteConnection.cursor()
-#         sqlite_select_Query = "SELECT * FROM zone_preferences where irrigation_trigger_by_moisture = 1;"
-#         cursor.execute(sqlite_select_Query)
-#         sqliteConnection.row_factory = sqlite3.Row
-#         record = cursor.fetchall()
-#         #print("Inside get_immediate_jobs")
-#         #print(record)
-#         for row in record:
-#             job_id = row[0]
-#             last_job_time = row[8]
-            
-#             job_pin = row[2]
-#             #print("Job Length is: " + str(job_length) + " Job Pin is: " + str(job_pin))
-#             p = multiprocessing.Process(target=job, args=(job_length,job_pin))
-#             immediate_jobs.append(p)
-#             p.start()
-#             #job(job_length,job_pin)
-#             cursor = sqliteConnection.cursor()
-#             sqlite_update_Query = "UPDATE immediate_jobs SET job_done = 1 where job_id = " + str(job_id) + ";"
-#             cursor.execute(sqlite_update_Query)
-#             sqliteConnection.commit()
-#             #print("Cleared Immediate job for pin " + str(job_pin)+ " of table, as completed.")
-#         cursor.close()
-#     except sqlite3.Error as error:
-#         raise error
+def get_recent_readings(sqliteConnection,sensor_name):
+    cursor = sqliteConnection.cursor()  
+    #query_for_recent_readings = "select readings.* from readings where readings.sensor_name="+sensor_name+" order by readings.time DESC limit 3;"
+    #cursor.execute("UPDATE zone_preferences SET last_watering = datetime('now','localtime') WHERE sensor_name = ?", (sensor_name,));
+    cursor.execute("select readings.capacity from readings where readings.sensor_name= ? order by readings.time DESC limit 3;", (sensor_name,));
+    #cursor.execute(query_for_recent_readings)
+    sqliteConnection.row_factory = sqlite3.Row
+    record = cursor.fetchall()
+    return record
+
+
+
+def get_sensor_reading_jobs(sqliteConnection):
+    sensor_reading_jobs = []
+    try:
+        cursor = sqliteConnection.cursor()
+        sqlite_select_Query = "SELECT * FROM zone_preferences where irrigation_trigger_by_moisture = 1;"
+        cursor.execute(sqlite_select_Query)
+        sqliteConnection.row_factory = sqlite3.Row
+        record = cursor.fetchall()
+        for row in record:
+            job_id = row[0]
+            sensor_name = row[1]
+            minimum_moisture = row[3]
+            job_length = row[4]
+            interval = row[5]
+            job_pin = row[7]
+            last_job_time = datetime.strptime(row[8], '%Y-%m-%d %X')
+            recent_readings = get_recent_readings(sqliteConnection,sensor_name)
+            timesince = (datetime.now() - last_job_time).seconds/60 
+            count = 0
+            for row in recent_readings:
+                if row[0] < minimum_moisture:
+                    count = count + 1
+            if count == 3:
+                if timesince > interval:
+                    p = multiprocessing.Process(target=job, args=(job_length,job_pin,sensor_name))
+        cursor.close()
+    except sqlite3.Error as error:
+        raise error
 
 def get_immediate_jobs(sqliteConnection):
     immediate_jobs = []
@@ -123,13 +131,11 @@ def get_immediate_jobs(sqliteConnection):
         sqliteConnection.row_factory = sqlite3.Row
         record = cursor.fetchall()
         #print("Inside get_immediate_jobs")
-        print(record)
         for row in record:
             job_id = row[0]
             sensor_name = row[1]
             job_length = row[2]
             job_pin = row[3]
-            print("Job Length is: " + str(job_length) + " Job Pin is: " + str(job_pin))
             p = multiprocessing.Process(target=job, args=(job_length,job_pin,sensor_name))
             immediate_jobs.append(p)
             p.start()
@@ -149,8 +155,8 @@ def connect_db(sqliteConnection):
     while True:
         try:
             jobs_on_table = get_valid_processes(sqliteConnection)
-            print("Getting Immediate Jobs")
             get_immediate_jobs(sqliteConnection)
+            get_sensor_reading_jobs(sqliteConnection)
         except Exception as e:
             raise e
             return
