@@ -183,17 +183,18 @@ function update_zone_preferences_check(sensor_name_var){
 };
 
 async function update_readings(reqBody, res, next){
-    console.log('running zone preference existence check..');
+    //console.log('running zone preference existence check..');
     let sensor_name_var = reqBody.sensor_name.replace("|","_");
     const result = await update_zone_preferences_check(sensor_name_var);
-    console.log(result)
+    //console.log(result)
     const inverted_reading = 1000 - reqBody.capacity   // capacity is inverted here.  The reading comes in meaning the closer to 1000 the dryer
     // and that is counter intuitive for most folks.  So it is being flipped.
     let current_time = new Date().toLocaleString().replace(',','');
+    console.log( [reqBody.sensor_name.replace("|","_"), inverted_reading, current_time])
     db.run("INSERT INTO readings (sensor_name, capacity, time) VALUES (?,?,?)",
         [reqBody.sensor_name.replace("|","_"), inverted_reading, current_time],
         function (err, result) {
-            console.log(reqBody)
+            //console.log(reqBody)
             if (err) {
                 res.status(400).json({ "error": err.message })
                 return;
