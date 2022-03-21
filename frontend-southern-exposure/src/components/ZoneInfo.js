@@ -27,7 +27,6 @@ function ZoneInfo(props) {
   const [checked, setChecked] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
 
-
   const formatResponse = (res) => {
     return JSON.stringify(res, null, 2);
   };
@@ -89,7 +88,8 @@ function ZoneInfo(props) {
   
   const { mutate: updateImmediateJobs, } = useMutation(
     async () => {
-      return await axiosClient.put(api_base_url + "immediate_jobs/", {      
+      return await axiosClient.put(api_base_url + "immediate_jobs/", {    
+        sensor_name: putSensorName,  
         job_length: Math.round(putIrrigationLength),
         job_gpio_pin: putZoneGPIOPin,
         job_done: 0,     
@@ -97,7 +97,7 @@ function ZoneInfo(props) {
     },
     {
       onSuccess: (res) => {
-        console.log("Watering "+ putZoneGPIOPin, putIrrigationLength, putZoneGPIOPin)
+        console.log("Watering "+ putSensorName + " For " + putIrrigationLength + "seconds on GPIO Pin: " + putZoneGPIOPin)
         const result = {
           status: res.status + "-" + res.statusText,
           headers: res.headers,
@@ -257,7 +257,8 @@ function validate_string_of_list() {
             <p>Length of Irrigation (in seconds): {data.data.rows.irrigation_length}</p>
             <p>Minimum Time Interval Between Irrigation Triggered by Moisture Reading (in minutes): {data.data.rows.irrigation_interval}</p>
             <p>Irrigation time of Day: {data.data.rows.irrigation_time}</p>
-            <p>GPIO Pin: {data.data.rows.gpio_pin}</p></div>
+            <p>GPIO Pin: {data.data.rows.gpio_pin}</p>
+            <p>Last Watering: {String(data.data.rows.last_watering)}</p></div>
           )}
         <div>
         <button
