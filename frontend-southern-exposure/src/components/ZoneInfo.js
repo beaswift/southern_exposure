@@ -84,6 +84,7 @@ function ZoneInfo(props) {
       },
     }
   );
+
   
   
   const { mutate: updateImmediateJobs, } = useMutation(
@@ -97,7 +98,7 @@ function ZoneInfo(props) {
     },
     {
       onSuccess: (res) => {
-        console.log("Watering "+ putSensorName + " For " + putIrrigationLength + "seconds on GPIO Pin: " + putZoneGPIOPin)
+        setTimeout(() => {  refetch() }, 1500 * putIrrigationLength );
         const result = {
           status: res.status + "-" + res.statusText,
           headers: res.headers,
@@ -141,9 +142,7 @@ function validate_string_of_list() {
       setShowWarning(true);
      }
     } 
-
-
-  
+ 
 
   function deletionActual() {
     try {
@@ -227,9 +226,6 @@ function validate_string_of_list() {
     }
   }
 
-  // function waterNow() {
-  //   console.log("Water Now! Pin: "+ putZoneGPIOPin)
-  // }
 
   function changeDisplay() {
     if (displayStateCurrentSettings === "block"){
