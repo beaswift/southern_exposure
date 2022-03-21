@@ -16,14 +16,18 @@ for i in pinList:
    GPIO.setup(i, GPIO.OUT)
    GPIO.output(i, GPIO.HIGH)
 
-def job(job_length,pin,sensor_name):
+def job(job_length,pin,job_name):
     GPIO.setup(pin, GPIO.OUT)
     GPIO.output(pin, GPIO.HIGH)
     GPIO.output(pin, GPIO.LOW)
     time.sleep(job_length)
     GPIO.output(pin, GPIO.HIGH)
     GPIO.cleanup(pin)
-    log_watering_time(sqliteConnection,sensor_name)
+    print("DID THE JOB")
+    print(job_name)
+    if "_lighting" not in job_name:  #If job was a watering job, log the watering time
+        job_name = job_name.replace("_watering","")
+        log_watering_time(sqliteConnection,job_name)
 
 def is_valid_worker(name_var):
     array_of_acceptable = get_valid_processes(sqliteConnection)
@@ -34,13 +38,13 @@ def is_valid_worker(name_var):
 def worker(name_var):
     """worker function"""
     worker_def_array = name_var.split("|")
-    sensor_name = worker_def_array[0].replace("_watering","")
+    job_name = worker_def_array[0]
     hour = worker_def_array[1][:2]
     minute = worker_def_array[1][2:4]
     gpio_pin = int(worker_def_array[3])
     job_length_variable = int(worker_def_array[2])
     # Split name_var here into it's parts for usage:
-    thisJob = schedule.every().day.at(hour+":"+minute).do(job, job_length = job_length_variable, pin = gpio_pin, sensor_name=sensor_name)
+    thisJob = schedule.every().day.at(hour+":"+minute).do(job, job_length = job_length_variable, pin = gpio_pin, job_name=job_name)
     #print("reached "+name_var+ "multiprocess")
     while True:
         if is_valid_worker(name_var):
@@ -110,14 +114,19 @@ def get_sensor_reading_jobs(sqliteConnection):
             job_pin = row[7]
             last_job_time = datetime.strptime(row[8], '%Y-%m-%d %X')
             recent_readings = get_recent_readings(sqliteConnection,sensor_name)
+            #print(recent_readings)
             timesince = (datetime.now() - last_job_time).seconds/60 
             count = 0
             for row in recent_readings:
+                #print(row[0])
                 if row[0] < minimum_moisture:
                     count = count + 1
             if count == 3:
                 if timesince > interval:
+                    print("Moisture Sensor trigger for: " + sensor_name)
                     p = multiprocessing.Process(target=job, args=(job_length,job_pin,sensor_name))
+                    sensor_reading_jobs.append(p)
+                    p.start()
         cursor.close()
     except sqlite3.Error as error:
         raise error
