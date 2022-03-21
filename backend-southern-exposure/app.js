@@ -18,8 +18,6 @@ const rpio = require('rpio');
 
 const HTTP_PORT = 8000
 
-
-
 const db = new sqlite3.Database('./southern_exposure_database.db', (err) => {
     if (err) {
         console.error("Error opening database " + err.message);
@@ -34,6 +32,7 @@ const db = new sqlite3.Database('./southern_exposure_database.db', (err) => {
             irrigation_interval INTEGER,\
             irrigation_time NVARCHAR(80),\
             gpio_pin INTEGER,\
+            last_watering TIMESTAMP NVARCHAR(20),\
             UNIQUE(sensor_name)\
         )', (err) => {
             if (err) {
@@ -82,6 +81,7 @@ const db = new sqlite3.Database('./southern_exposure_database.db', (err) => {
 
         db.run('CREATE TABLE IF NOT EXISTS immediate_jobs( \
             job_id INTEGER PRIMARY KEY NOT NULL,\
+            sensor_name NVARCHAR(20) NOT NULL,\
             job_length INTEGER,\
             job_gpio_pin INTEGER,\
             job_done INTEGER\
@@ -89,6 +89,20 @@ const db = new sqlite3.Database('./southern_exposure_database.db', (err) => {
             if (err) {
                 console.log(err);
                 console.log("Table immediate_jobs already exists.");
+            } 
+        });
+
+        db.run('CREATE TABLE IF NOT EXISTS past_readings( \
+            past_reading_id INTEGER PRIMARY KEY NOT NULL,\
+            sensor_name NVARCHAR(20) NOT NULL,\
+            date TIMESTAMP NVARCHAR(20),\
+            daily_high INTEGER,\
+            daily_low INTEGER,\
+            daily_average REAL\
+        )', (err) => {
+            if (err) {
+                console.log(err);
+                console.log("Table past_readings already exists.");
             } 
         });
     }
@@ -191,8 +205,8 @@ async function update_readings(reqBody, res, next){
     // and that is counter intuitive for most folks.  So it is being flipped.
     let current_time = new Date().toLocaleString().replace(',','');
     console.log( [reqBody.sensor_name.replace("|","_"), inverted_reading, current_time])
-    db.run("INSERT INTO readings (sensor_name, capacity, time) VALUES (?,?,?)",
-        [reqBody.sensor_name.replace("|","_"), inverted_reading, current_time],
+    db.run("INSERT INTO readings (sensor_name, capacity, time) VALUES (?,?,datetime('now','localtime'))",
+        [reqBody.sensor_name.replace("|","_"), inverted_reading],
         function (err, result) {
             //console.log(reqBody)
             if (err) {
@@ -259,8 +273,8 @@ app.put("/lighting_preferences/", (req, res, next) => {
 
 //Creation of immedidate jobs put 
 app.put("/immediate_jobs/", (req, res, next) => {
-    db.run("INSERT INTO immediate_jobs (job_length, job_gpio_pin, job_done) VALUES (?,?,?);",
-    [req.body.job_length, req.body.job_gpio_pin, req.body.job_done],
+    db.run("INSERT INTO immediate_jobs (sensor_name, job_length, job_gpio_pin, job_done) VALUES (?,?,?,?);",
+    [req.body.sensor_name, req.body.job_length, req.body.job_gpio_pin, req.body.job_done],
     function (err, result) {
         console.log(req.body)
         if (err) {
