@@ -3,7 +3,6 @@ import './App.css';
 import React, { useState} from "react";
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { Navbar, NavDropdown, Nav, Container } from 'react-bootstrap';
-//import Navigation from "./components/Navigation";
 import BasicInfo from "./components/BasicInfo";
 import ZoneInfo from "./components/ZoneInfo";
 import AddZone from "./components/AddZone";
@@ -12,17 +11,6 @@ import { axiosClient } from "./api-common.js";
 import { useQuery } from "react-query";
 
 const api_base_url = axiosClient.defaults.baseURL
-
-
-//import Navigation from "./components/Navigation";
-
-//import { useQuery, useMutation } from "react-query";
-//mport { axiosClient } from "./api-common.js";
-
-//const api_base_url = axiosClient.defaults.baseURL
-//import { Button, Navbar, NavDropdown, Nav, Container } from 'react-bootstrap'
-//import Navbar from 'react-bootstrap/Navbar'
-
 
 function App(props) {
   const { isLoading, error, data, refetch } = useQuery('fetchZones', () =>
