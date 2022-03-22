@@ -2,12 +2,9 @@ import React , { useState, useEffect }from 'react'
 import { axiosClient } from "../api-common.js";
 import { useQuery, useMutation } from "react-query";
 import FormValidation from "./FormValidation";
+import ReadingsChart from './ReadingsChart'
 
 const api_base_url = axiosClient.defaults.baseURL;
-//const Gpio = require('onoff').Gpio;
-//const gpio = require("gpio");
-//const Gpio = require('pigpio').Gpio;
-
 
 function ZoneInfo(props) {
   const [displayStateCurrentSettings, setDisplayStateCurrentSettings] = useState('block');
@@ -275,6 +272,9 @@ function validate_string_of_list() {
           </button>
           </div>
           <br />
+          <div className='chart'>
+          <ReadingsChart />
+          </div>
           <br />
 
           <button className="btn btn-sm btn-primary" onClick={deleteZone}>
