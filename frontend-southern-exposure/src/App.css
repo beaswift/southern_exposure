@@ -2,6 +2,11 @@
   text-align: center;
 }
 
+.chart {
+  width: 70%;
+  margin: auto;
+}
+
 .App-logo {
   height: 40vmin;
   pointer-events: none;
