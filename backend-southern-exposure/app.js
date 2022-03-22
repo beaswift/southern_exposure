@@ -18,6 +18,17 @@ const rpio = require('rpio');
 
 const HTTP_PORT = 8000
 
+const update_past_readings_table = schedule.scheduleJob('00 02 00 * * *', function(){
+    db.run("INSERT INTO past_readings (sensor_name, date, daily_high, daily_low, daily_average) select sensor_name, \
+    DATE('now', 'localtime', '-1 day'),  max(capacity),  min(capacity), avg(capacity) from readings where DATE(time) = DATE('now', 'localtime', '-1 day') \
+    GROUP BY sensor_name;");
+});
+
+const delete_old_readings = schedule.scheduleJob('00 05 00 * * *', function(){
+    db.run("DELETE from readings where DATE(time) < DATE('now', 'localtime', '-1 day');");
+});
+
+
 const db = new sqlite3.Database('./southern_exposure_database.db', (err) => {
     if (err) {
         console.error("Error opening database " + err.message);
@@ -109,17 +120,18 @@ const db = new sqlite3.Database('./southern_exposure_database.db', (err) => {
 });
 
 
-// function turn_on_gpio(pin,milliseconds_to_run,job_name) {
-//     console.log("Starting " + job_name)
-    
-//     rpio.write(pin, rpio.HIGH);
-//     setTimeout(() => {rpio.write(pin, rpio.LOW)
-//     console.log("Ending " + job_name)}, milliseconds_to_run);
-    
-// };
 
-
-// get api endpoints
+app.get("/past_readings/:sensor_name", (req, res, next) => {
+    db.get("SELECT * FROM past_readings WHERE sensor_name = (?) ORDER BY date LIMIT 30",  
+    [req.params.sensor_name], 
+    (err, rows) => {
+        if (err) {
+            res.status(400).json({ "error": err.message });
+            return;
+        }
+        res.status(200).json({ rows });
+    });
+});
 
 app.get("/zones", (req, res, next) => {
     db.all("SELECT * FROM zone_preferences", [], (err, rows) => {
