@@ -119,10 +119,8 @@ const db = new sqlite3.Database('./southern_exposure_database.db', (err) => {
     }
 });
 
-
-
 app.get("/past_readings/:sensor_name", (req, res, next) => {
-    db.get("SELECT * FROM past_readings WHERE sensor_name = (?) ORDER BY date LIMIT 30",  
+    db.all("SELECT * FROM past_readings WHERE sensor_name = (?) ORDER BY date LIMIT 30", 
     [req.params.sensor_name], 
     (err, rows) => {
         if (err) {
@@ -251,7 +249,6 @@ function update_jobs_table_with_lighting_job(job_name_type,lighting_times_var,li
 };
 
 
-
 async function update_lighting(reqBody, res, next){
     console.log('running update of jobs table for lighting..');
     let job_type = "_lighting";
@@ -334,10 +331,6 @@ async function update_zones(reqBody, res, next){
            })
        });
 }; 
-
-// async function lookup_jobs_async(){
-//     const result = await lookup_jobs();
-// }; 
 
 app.put("/zones/", (req, res, next) => {
     let reqBody = req.body;
