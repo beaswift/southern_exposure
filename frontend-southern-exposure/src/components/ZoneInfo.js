@@ -273,7 +273,7 @@ function validate_string_of_list() {
           </div>
           <br />
           <div className='chart'>
-          <ReadingsChart />
+          <ReadingsChart pastReadingsZone={putSensorName} key={putSensorName}/>
           </div>
           <br />
 
