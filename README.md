@@ -1,6 +1,6 @@
 # Southern Exposure
 
-Southern Exposure is an automated software for managing the watering and lighting of plants - both indoors and outdoors.  Utitlizing REACT.js, Node.js, SQLite3, Express and Python the software allows someone to utilize a Raspberry Pi to set up zones for varied watering and lighting schedules and settings for different sections of a garden, greenhouse, or vertical garden.  
+Southern Exposure is an automated software for managing the watering and lighting of plants - both indoors and outdoors.  Utitlizing REACT.js, Node.js, SQLite3, Express and Python the software allows someone to use a Raspberry Pi to set up zones for varied watering and lighting schedules and settings for different sections of a garden, greenhouse, or vertical garden.  
 
 With this application you are able to
 - Create scheduled waterings for multiple zones
