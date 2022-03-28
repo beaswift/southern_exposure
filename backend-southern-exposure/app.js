@@ -120,7 +120,7 @@ const db = new sqlite3.Database('./southern_exposure_database.db', (err) => {
 });
 
 app.get("/past_readings/:sensor_name", (req, res, next) => {
-    db.all("SELECT * FROM past_readings WHERE sensor_name = (?) ORDER BY date LIMIT 30", 
+    db.all("SELECT * FROM past_readings WHERE sensor_name = (?) ORDER BY date DESC LIMIT 30", 
     [req.params.sensor_name], 
     (err, rows) => {
         if (err) {
